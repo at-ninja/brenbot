@@ -3,10 +3,13 @@ import sys
 import time
 import random
 import threading
+import subprocess
 from slackclient import SlackClient
 
 # Get the bot's token
 SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
+BOT_ID = ""
+AT_BOT = ""
 
 # Start Slack client
 slack_client = SlackClient(SLACK_BOT_TOKEN)
@@ -18,14 +21,22 @@ READ_WEBSOCKET_DELAY = 1
 REACT_TO_USERS = []
 REACTIONS = []
 
+# Create the running var
+IS_RUNNING = True
+
 
 def main():
-    global REACTIONS, REACT_TO_USERS
-
-    REACTIONS = get_emojis("emoji_filter.txt")
-    REACT_TO_USERS = get_users_id("react_to.txt")
+    global REACTIONS, REACT_TO_USERS, IS_RUNNING, BOT_ID, AT_BOT
 
     if slack_client.rtm_connect():
+
+        REACTIONS = get_emojis("emoji_filter.txt")
+        REACT_TO_USERS = get_users_id("react_to.txt")
+
+        with open("my_name.txt") as fp:
+            BOT_ID = get_user_id(fp.readline().strip())
+        AT_BOT = "<@" + BOT_ID + ">"
+
         print("Brenbot connected and running!")
 
         reactions = threading.Thread(group=None, target=reactions_loop, name="Reactions")
@@ -33,8 +44,11 @@ def main():
         reactions.start()
         motd.start()
 
-        # Wait for threads to join back to main before stopping the program
-        # Todo implement a better method of stopping the program
+        print("Type 'stop' to stop brenbot")
+        user_input = input("brenbot_>")
+        while user_input.strip() != "stop":
+            user_input = input("brenbot_>")
+        IS_RUNNING = False
         reactions.join()
         motd.join()
     else:
@@ -42,13 +56,13 @@ def main():
 
 
 def reactions_loop():
-    while threading.main_thread().is_alive():
+    while IS_RUNNING and threading.main_thread().is_alive():
         parse_slack_output(slack_client.rtm_read())
         time.sleep(READ_WEBSOCKET_DELAY)
 
 
 def motd_loop():
-    while threading.main_thread().is_alive():
+    while IS_RUNNING and threading.main_thread().is_alive():
         current_time = time.localtime()
         # Once a day at noon, post a MotD
         if current_time[3] == 12 and current_time[4] == 0 and current_time[5] == 0:
@@ -108,10 +122,21 @@ def get_users_id(file_name):
 
 def react_to_user(channel, ts):
     """
-        Reacts to messages by a user
+        Reacts to messages by a user by using reactions (emoji)
     """
     slack_client.api_call('reactions.add', name=REACTIONS[random.randrange(0, len(REACTIONS))],
                           timestamp=ts, channel=channel)
+
+
+def react_to_message(channel, user, text):
+    """
+        Reacts to a command (message) from a user by posting a response.
+    """
+    # If fortune is in the text, we will assume the user wants a brenbot fortune
+    if 'fortune' in text:
+        fortune = subprocess.check_output(['fortune']).decode('utf-8')
+        fortune = "<@" + user + ">: " + fortune
+        slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -123,10 +148,16 @@ def parse_slack_output(slack_rtm_output):
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
-            if output and 'user' in output and output['user'] in REACT_TO_USERS and 'ts' in output:
+            if output and 'user' in output and output['user'] in REACT_TO_USERS \
+                    and 'type' in output and output['type'] == 'message' \
+                    and 'channel' in output \
+                    and 'ts' in output:
                 react_to_user(output['channel'], output['ts'])
-
-    return
+            if output and 'type' in output and output['type'] == 'message' \
+                    and 'text' in output and AT_BOT in output['text'] \
+                    and 'channel' in output \
+                    and 'user' in output:
+                react_to_message(output['channel'], output['user'], output['text'])
 
 
 def get_emojis(file_name):
