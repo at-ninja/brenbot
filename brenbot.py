@@ -141,7 +141,7 @@ def react_to_message(channel, user, text):
         # TODO make this command cleaner execution-wise
         say_to_channel = ''.join(text.split('say:')[1:]).strip()
         channel_to_send = '#' + say_to_channel.split(' ')[0].strip()
-        say_to_channel = ''.join(say_to_channel.split(' ')[1:]).strip()
+        say_to_channel = ' '.join(say_to_channel.split(' ')[1:]).strip()
         slack_client.api_call('chat.postMessage', channel=channel_to_send, text=say_to_channel, as_user=True)
 
 
