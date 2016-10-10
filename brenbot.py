@@ -137,6 +137,12 @@ def react_to_message(channel, user, text):
         fortune = subprocess.check_output(['fortune']).decode('utf-8')
         fortune = "<@" + user + ">: " + fortune
         slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
+    elif user in REACT_TO_USERS and 'say:' in text:
+        # TODO make this command cleaner execution-wise
+        say_to_channel = ''.join(text.split('say:')[1:]).strip()
+        channel_to_send = '#' + say_to_channel.split(' ')[0].strip()
+        say_to_channel = ''.join(say_to_channel.split(' ')[1:]).strip()
+        slack_client.api_call('chat.postMessage', channel=channel_to_send, text=say_to_channel, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
