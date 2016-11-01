@@ -8,6 +8,9 @@ import threading
 import subprocess
 from slackclient import SlackClient
 
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 # Get the bot's token
 SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
 BOT_ID = ""
@@ -28,28 +31,30 @@ IS_RUNNING = True
 
 
 def main():
-    global REACTIONS, REACT_TO_USERS, IS_RUNNING, BOT_ID, AT_BOT
+    global REACTIONS, REACT_TO_USERS, IS_RUNNING, BOT_ID, AT_BOT, __location__
+    try:
+        if slack_client.rtm_connect():
 
-    if slack_client.rtm_connect():
+            REACTIONS = get_emojis("emoji_filter.txt")
+            REACT_TO_USERS = get_users_id("react_to.txt")
 
-        REACTIONS = get_emojis("emoji_filter.txt")
-        REACT_TO_USERS = get_users_id("react_to.txt")
+            with open(os.path.join(__location__, "my_name.txt")) as fp:
+                BOT_ID = get_user_id(fp.readline().strip())
+            AT_BOT = "<@" + BOT_ID + ">"
 
-        with open("my_name.txt") as fp:
-            BOT_ID = get_user_id(fp.readline().strip())
-        AT_BOT = "<@" + BOT_ID + ">"
+            print("Brenbot connected and running!")
 
-        print("Brenbot connected and running!")
+            reactions = threading.Thread(group=None, target=reactions_loop, name="Reactions")
+            motd = threading.Thread(group=None, target=motd_loop, name="MotD")
+            reactions.start()
+            motd.start()
 
-        reactions = threading.Thread(group=None, target=reactions_loop, name="Reactions")
-        motd = threading.Thread(group=None, target=motd_loop, name="MotD")
-        reactions.start()
-        motd.start()
-
-        reactions.join()
-        motd.join()
-    else:
-        print("Connection failed. Invalid Slack token?")
+            reactions.join()
+            motd.join()
+        else:
+            print("Connection failed. Invalid Slack token?")
+    except:
+        IS_RUNNING = False
 
 
 def reactions_loop():
@@ -76,17 +81,18 @@ def motd_loop():
 
 
 def post_motd():
-    with open("MotD.txt") as fp:
+    global __location__
+    with open(os.path.join(__location__, "MotD.txt")) as fp:
         lines = fp.read().strip().split("\n")
 
     main_message = lines[random.randrange(0, len(lines))]
 
-    with open("MotD_random.txt") as fp:
+    with open(os.path.join(__location__, "MotD_random.txt")) as fp:
         lines = fp.read().strip().split("\n")
 
     random_message = lines[random.randrange(0, len(lines))]
 
-    with open("MotD_channels.txt") as fp:
+    with open(os.path.join(__location__, "MotD_channels.txt")) as fp:
             channels = fp.read().strip().split("\n")
 
     for channel in channels:
@@ -108,8 +114,8 @@ def get_user_id(name):
 
 
 def get_users_id(file_name):
-
-    with open(file_name) as fp:
+    global __location__
+    with open(os.path.join(__location__, file_name)) as fp:
         names = fp.read().strip().split("\n")
 
     api_call = slack_client.api_call("users.list")
@@ -172,7 +178,8 @@ def parse_slack_output(slack_rtm_output):
 
 
 def get_emojis(file_name):
-    with open(file_name) as fp:
+    global __location__
+    with open(os.path.join(__location__, file_name)) as fp:
         key_filter = fp.read().strip()
     api_call = slack_client.api_call("emoji.list")
     emojis = api_call.get("emoji")
