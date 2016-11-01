@@ -44,11 +44,6 @@ def main():
         reactions.start()
         motd.start()
 
-        print("Type 'stop' to stop brenbot")
-        user_input = input("brenbot_>")
-        while user_input.strip() != "stop":
-            user_input = input("brenbot_>")
-        IS_RUNNING = False
         reactions.join()
         motd.join()
     else:
@@ -56,18 +51,26 @@ def main():
 
 
 def reactions_loop():
-    while IS_RUNNING and threading.main_thread().is_alive():
-        parse_slack_output(slack_client.rtm_read())
-        time.sleep(READ_WEBSOCKET_DELAY)
+    global IS_RUNNING
+    try:
+        while IS_RUNNING and threading.main_thread().is_alive():
+            parse_slack_output(slack_client.rtm_read())
+            time.sleep(READ_WEBSOCKET_DELAY)
+    except:
+        IS_RUNNING = False
 
 
 def motd_loop():
-    while IS_RUNNING and threading.main_thread().is_alive():
-        current_time = time.localtime()
-        # Once a day at noon, post a MotD
-        if current_time[3] == 12 and current_time[4] == 0 and current_time[5] == 0:
-            post_motd()
-        time.sleep(1)
+    global IS_RUNNING
+    try:
+        while IS_RUNNING and threading.main_thread().is_alive():
+            current_time = time.localtime()
+            # Once a day at noon, post a MotD
+            if current_time[3] == 12 and current_time[4] == 0 and current_time[5] == 0:
+                post_motd()
+            time.sleep(1)
+    except:
+        IS_RUNNING = False
 
 
 def post_motd():
