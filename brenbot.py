@@ -88,7 +88,7 @@ def main():
             reactions.join()
             motd.join()
         else:
-            print("Connection failed. Invalid Slack token?")
+            print("Connection failed. Invalid Slack token?", SLACK_BOT_TOKEN)
     except Exception as exception:
         IS_RUNNING = False
         print(str(exception))
