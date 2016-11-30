@@ -14,7 +14,7 @@ __location__ = os.path.realpath(
 
 # Get the bot's token
 SLACK_BOT_TOKEN = ""
-with open('secret.txt') as fp:
+with open(os.path.join(__location__, 'secret.txt')) as fp:
     SLACK_BOT_TOKEN = fp.read().strip()
 
 BOT_ID = ""
