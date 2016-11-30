@@ -13,7 +13,10 @@ __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 # Get the bot's token
-SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
+SLACK_BOT_TOKEN = ""
+with open('secret.txt') as fp:
+    SLACK_BOT_TOKEN = fp.read().strip()
+
 BOT_ID = ""
 AT_BOT = ""
 
@@ -88,7 +91,7 @@ def main():
             reactions.join()
             motd.join()
         else:
-            print("Connection failed. Invalid Slack token?", SLACK_BOT_TOKEN)
+            print("Connection failed. Invalid Slack token?")
     except Exception as exception:
         IS_RUNNING = False
         print(str(exception))
