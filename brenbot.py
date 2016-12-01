@@ -34,7 +34,7 @@ REACTIONS = []
 IS_RUNNING = True
 
 # Deafults for logging
-LOG_FILENAME = "/tmp/Brenbot.log"
+LOG_FILENAME = os.path.join(__location__, "/logs/Brenbot.log")
 LOG_LEVEL = logging.INFO  # Could be e.g. "DEBUG" or "WARNING"
 
 # Configure logging to log to a file, making a new file at midnight and keeping the last 3 day's data
