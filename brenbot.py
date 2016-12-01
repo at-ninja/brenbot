@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+import sys
+
 sys.path.append('/usr/local/lib/python3.5/site-packages')
 
 import logging
 import logging.handlers
 import os
-import sys
+
 import time
 import random
 import threading
