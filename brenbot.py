@@ -197,7 +197,7 @@ def react_to_message(channel, user, text):
         fortune = "<@" + user + ">: " + fortune
         slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
     elif 'fortune' in text and 'cow' in text:
-        fortune = subprocess.check_output(['fortune | cowsay'], shell=True).decode('utf-8')
+        fortune = subprocess.check_output(['fortune | cowsay -W 35'], shell=True).decode('utf-8')
         fortune = "<@" + user + ">:\n```" + fortune + "```"
         slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
     elif 'fortune' in text:
