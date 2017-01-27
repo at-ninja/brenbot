@@ -192,7 +192,11 @@ def react_to_message(channel, user, text):
         Reacts to a command (message) from a user by posting a response.
     """
     # If fortune is in the text, we will assume the user wants a brenbot fortune
-    if 'fortune' in text:
+    if 'fortune' in text and 'wild' in text:
+        fortune = subprocess.check_output(['fortune -o']).decode('utf-8')
+        fortune = "<@" + user + ">: " + fortune
+        slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
+    elif 'fortune' in text:
         fortune = subprocess.check_output(['fortune']).decode('utf-8')
         fortune = "<@" + user + ">: " + fortune
         slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
