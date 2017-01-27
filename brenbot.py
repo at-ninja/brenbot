@@ -193,7 +193,7 @@ def react_to_message(channel, user, text):
     """
     # If fortune is in the text, we will assume the user wants a brenbot fortune
     if 'fortune' in text and 'wild' in text:
-        fortune = subprocess.check_output(['fortune -o']).decode('utf-8')
+        fortune = subprocess.check_output(['fortune']).decode('utf-8')
         fortune = "<@" + user + ">: " + fortune
         slack_client.api_call('chat.postMessage', channel=channel, text=fortune, as_user=True)
     elif 'fortune' in text and 'cow' in text:
