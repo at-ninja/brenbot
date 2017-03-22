@@ -119,11 +119,11 @@ def motd_loop():
     global IS_RUNNING
     try:
         while IS_RUNNING and threading.main_thread().is_alive():
-            current_time = time.localtime()
+            # current_time = time.localtime()
             # Once a day at noon, post a MotD
-            if current_time[3] == 12 and current_time[4] == 0 and current_time[5] == 0:
-                post_motd()
-            time.sleep(1)
+            # if current_time[3] == 12 and current_time[4] == 0 and current_time[5] == 0:
+            post_motd()
+            time.sleep(86400)
     except:
         IS_RUNNING = False
 
